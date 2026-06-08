@@ -10,7 +10,8 @@ export const mastersController = {
   list: asyncHandler(async (req: Request, res: Response) => {
     const filters = validate(masterFiltersSchema, req.query);
     const masters = await mastersService.listMasters(filters);
-    res.json({ count: masters.length, data: masters });
+    // El frontend consume un array directo (no envoltorio).
+    res.json(masters);
   }),
 
   // GET /api/masters/:id

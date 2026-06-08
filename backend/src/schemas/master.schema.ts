@@ -2,8 +2,19 @@
 import { z } from 'zod';
 import { modalitySchema } from './profile.schema';
 
-/** UUID válido (Prisma genera UUID v4). */
+/** UUID válido (Prisma genera UUID v4). Se usa para ids de máster. */
 export const idSchema = z.string().uuid('Identificador con formato no válido');
+
+/**
+ * Id flexible para `profileId`: el frontend puede usar un UUID real (devuelto
+ * por /analyze) o un identificador de demo (p. ej. "demo-profile"). Validamos
+ * formato (no vacío y acotado) sin exigir UUID, para no rechazar usos legítimos.
+ */
+export const flexibleIdSchema = z
+  .string()
+  .trim()
+  .min(1, 'Identificador obligatorio')
+  .max(100, 'Identificador demasiado largo');
 
 /** Filtros de GET /api/masters (todos opcionales, llegan como query string). */
 export const masterFiltersSchema = z.object({
@@ -24,7 +35,7 @@ export const idParamSchema = z.object({
 export const compareSchema = z.object({
   masterIds: z
     .array(idSchema)
-    .min(2, 'Indica al menos 2 másteres para comparar')
+    .min(1, 'Indica al menos un máster para comparar')
     .max(3, 'Solo se pueden comparar un máximo de 3 másteres')
     .refine((ids) => new Set(ids).size === ids.length, {
       message: 'No repitas el mismo máster en la comparativa',
@@ -33,13 +44,13 @@ export const compareSchema = z.object({
 
 /** Body de POST /api/saved-masters. */
 export const saveMasterSchema = z.object({
-  profileId: idSchema,
+  profileId: flexibleIdSchema,
   masterId: idSchema,
 });
 
 /** Query de GET /api/saved-masters?profileId=xxx. */
 export const savedMastersQuerySchema = z.object({
-  profileId: idSchema,
+  profileId: flexibleIdSchema,
 });
 
 export type MasterFiltersSchema = z.infer<typeof masterFiltersSchema>;

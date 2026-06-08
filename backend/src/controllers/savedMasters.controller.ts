@@ -17,6 +17,7 @@ export const savedMastersController = {
   list: asyncHandler(async (req: Request, res: Response) => {
     const { profileId } = validate(savedMastersQuerySchema, req.query);
     const saved = await savedMastersService.listByProfile(profileId);
-    res.json({ count: saved.length, data: saved });
+    // El frontend consume un array directo (no envoltorio).
+    res.json(saved);
   }),
 };
