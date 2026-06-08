@@ -1,0 +1,164 @@
+// MasterMatch AI · Esquema Prisma (PostgreSQL)
+// Modelo de datos para perfiles de usuario, programas de máster,
+// recomendaciones generadas y másteres guardados.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+/// Modalidad de impartición de un máster.
+enum Modality {
+  onsite
+  online
+  hybrid
+}
+
+/// Nivel de dificultad de admisión (cualitativo).
+enum AdmissionDifficulty {
+  low
+  medium
+  high
+  very_high
+}
+
+/// Perfil completo del usuario tal y como lo envía el frontend.
+/// Los campos se almacenan "aplanados" para simplificar consultas.
+model UserProfile {
+  id   String @id @default(uuid())
+
+  // personalInfo
+  name                 String
+  age                  Int
+  residenceCountry     String
+  languages            String[]
+  englishLevel         String
+  maxBudget            Float
+  willingToStudyAbroad Boolean
+
+  // academicInfo
+  degree           String
+  university       String
+  gpa              Float
+  studyCountry     String
+  graduationYear   Int
+  favoriteSubjects String[]
+
+  // masterPreferences
+  preferredCountries    String[]
+  preferredUniversities String[]
+  modality              Modality
+  desiredDuration       String
+  yearlyBudget          Float
+  preferredLanguage     String
+  interestArea          String
+
+  // careerGoals
+  targetSector                 String
+  targetRole                   String
+  targetWorkCountry            String
+  employabilityImportance      Int
+  prestigeImportance           Int
+  costImportance               Int
+  internationalLifeImportance  Int
+  networkingImportance         Int
+
+  createdAt DateTime @default(now())
+
+  recommendations Recommendation[]
+  savedMasters    SavedMaster[]
+
+  @@index([interestArea])
+  @@index([createdAt])
+  @@map("user_profiles")
+}
+
+/// Programa de máster del catálogo.
+model MasterProgram {
+  id String @id @default(uuid())
+
+  name       String
+  university String
+  country    String
+  city       String
+  duration   String
+  price      Float
+  language   String
+  modality   Modality
+  area       String
+
+  // Indicadores 0-100 usados por el scoring.
+  rankingScore        Int
+  employabilityScore  Int
+  networkingScore     Int
+  internationalScore  Int
+
+  admissionDifficulty AdmissionDifficulty
+  requiredEnglishLevel String
+
+  description    String
+  requirements   String[]
+  careerOutcomes String[]
+  scholarshipInfo String?
+  officialUrl     String?
+
+  /// true cuando los datos son demo/seed y no proceden de fuentes oficiales.
+  isDemoData Boolean @default(true)
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  recommendations Recommendation[]
+  savedMasters    SavedMaster[]
+
+  @@index([area])
+  @@index([country])
+  @@index([university])
+  @@index([language])
+  @@index([modality])
+  @@index([price])
+  @@map("master_programs")
+}
+
+/// Recomendación persistida (resultado de scoring + IA) para un perfil.
+model Recommendation {
+  id        String @id @default(uuid())
+  profileId String
+  masterId  String
+
+  matchScore    Float
+  reasons       String[]
+  pros          String[]
+  cons          String[]
+  aiExplanation String?
+
+  createdAt DateTime @default(now())
+
+  profile UserProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  master  MasterProgram @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@index([profileId])
+  @@index([masterId])
+  @@index([profileId, matchScore])
+  @@map("recommendations")
+}
+
+/// Máster guardado por un usuario (favorito). Único por (perfil, máster).
+model SavedMaster {
+  id        String @id @default(uuid())
+  profileId String
+  masterId  String
+
+  createdAt DateTime @default(now())
+
+  profile UserProfile   @relation(fields: [profileId], references: [id], onDelete: Cascade)
+  master  MasterProgram @relation(fields: [masterId], references: [id], onDelete: Cascade)
+
+  @@unique([profileId, masterId])
+  @@index([profileId])
+  @@map("saved_masters")
+}

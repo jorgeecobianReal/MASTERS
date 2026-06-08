@@ -1,0 +1,81 @@
+### MasterMatch AI · Ejemplos de requests
+### Compatible con la extensión "REST Client" de VS Code.
+### Cambia @host si usas otro puerto.
+
+@host = http://localhost:4000
+
+### Healthcheck (estado de catálogo e IA)
+GET {{host}}/api/health
+
+### 1) Analizar perfil y obtener recomendaciones
+# @name analyze
+POST {{host}}/api/profile/analyze
+Content-Type: application/json
+
+{
+  "personalInfo": {
+    "name": "Jorge",
+    "age": 24,
+    "residenceCountry": "España",
+    "languages": ["Español", "Inglés"],
+    "englishLevel": "C1",
+    "maxBudget": 30000,
+    "willingToStudyAbroad": true
+  },
+  "academicInfo": {
+    "degree": "Ingeniería Informática",
+    "university": "Universidad de Vigo",
+    "gpa": 8.2,
+    "studyCountry": "España",
+    "graduationYear": 2024,
+    "favoriteSubjects": ["Machine Learning", "Estadística"]
+  },
+  "masterPreferences": {
+    "preferredCountries": ["España", "Países Bajos"],
+    "preferredUniversities": [],
+    "modality": "onsite",
+    "desiredDuration": "12 meses",
+    "yearlyBudget": 15000,
+    "language": "Español",
+    "interestArea": "Inteligencia Artificial"
+  },
+  "careerGoals": {
+    "targetSector": "Tecnología",
+    "targetRole": "Machine Learning Engineer",
+    "targetWorkCountry": "España",
+    "employabilityImportance": 9,
+    "prestigeImportance": 6,
+    "costImportance": 8,
+    "internationalLifeImportance": 5,
+    "networkingImportance": 5
+  }
+}
+
+### 2) Listar todos los másteres
+GET {{host}}/api/masters
+
+### 2b) Listar con filtros
+GET {{host}}/api/masters?area=Inteligencia&maxPrice=20000&modality=onsite
+
+### 3) Detalle de un máster (sustituye el id por uno real de /api/masters)
+GET {{host}}/api/masters/REEMPLAZA_CON_ID
+
+### 4) Comparar másteres (máximo 3)
+POST {{host}}/api/masters/compare
+Content-Type: application/json
+
+{
+  "masterIds": ["ID_1", "ID_2"]
+}
+
+### 5) Guardar un máster (usa el profileId que devuelve /analyze)
+POST {{host}}/api/saved-masters
+Content-Type: application/json
+
+{
+  "profileId": "ID_DEL_PERFIL",
+  "masterId": "ID_DEL_MASTER"
+}
+
+### 6) Ver másteres guardados de un perfil
+GET {{host}}/api/saved-masters?profileId=ID_DEL_PERFIL
